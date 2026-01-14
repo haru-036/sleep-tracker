@@ -1,4 +1,14 @@
-import { Bath, Circle, Coffee, Moon, Pill, Sun, X } from "lucide-react";
+import {
+	Bath,
+	Bed,
+	ChartNoAxesGantt,
+	Circle,
+	Coffee,
+	Moon,
+	Pill,
+	Sun,
+	X,
+} from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import type {
@@ -246,12 +256,9 @@ export default function SleepTracker() {
 						<X className="w-6 h-6" strokeWidth={1.5} />
 					</button>
 
-					<div className="flex-1 flex flex-col items-center justify-center p-8 space-y-12">
+					<div className="flex-1 flex flex-col items-center justify-center p-8 space-y-10">
 						<div className="text-center space-y-3">
-							<p className="text-neutral-400 text-sm tracking-wide">
-								今日もお疲れ様でした
-							</p>
-							<h2 className="text-2xl font-light text-neutral-200 tracking-wider">
+							<h2 className="text-2xl font-light text-neutral-300 tracking-wider">
 								おやすみなさい
 							</h2>
 						</div>
@@ -259,17 +266,17 @@ export default function SleepTracker() {
 						<div className="w-full max-w-sm">
 							<div className="bg-neutral-900/70 backdrop-blur-sm rounded-3xl p-12 text-center space-y-6 border border-neutral-800/50">
 								<div className="w-24 h-24 mx-auto bg-neutral-800 rounded-full flex items-center justify-center">
-									<Moon
-										className="w-12 h-12 text-neutral-300"
+									<Bed
+										className="w-12 h-12 text-neutral-400"
 										strokeWidth={1.5}
 									/>
 								</div>
 
-								<div className="space-y-2">
+								<div className="space-y-3">
 									<p className="text-neutral-400 text-xs tracking-wide">
 										就寝時間
 									</p>
-									<p className="text-6xl font-light text-neutral-100 tracking-tight">
+									<p className="text-5xl font-light text-neutral-100 tracking-tight">
 										{pendingBedTime?.time}
 									</p>
 									<p className="text-neutral-500 text-xs">
@@ -297,10 +304,10 @@ export default function SleepTracker() {
 					{!showForm ? (
 						<>
 							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
-								睡眠記録
+								zzz...
 							</h1>
 							<p className="text-neutral-500 text-sm tracking-wide">
-								毎日を、ひとつ整える
+								{formatDateFull(currentRecord.date)}
 							</p>
 						</>
 					) : (
@@ -396,10 +403,10 @@ export default function SleepTracker() {
 							<button
 								type="button"
 								onClick={handleTakeMedication}
-								className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+								className={`flex items-center gap-2 rounded-full transition-colors ${
 									pendingMedication
-										? "bg-neutral-800 border border-neutral-700"
-										: "bg-neutral-900 border border-neutral-800 hover:bg-neutral-850"
+										? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
+										: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
 								}`}
 							>
 								<Pill
@@ -423,10 +430,7 @@ export default function SleepTracker() {
 							className="w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-12 hover:bg-neutral-850 transition-colors"
 						>
 							<div className="w-20 h-20 mx-auto mb-6 bg-neutral-800 rounded-full flex items-center justify-center">
-								<Moon
-									className="w-10 h-10 text-neutral-300"
-									strokeWidth={1.5}
-								/>
+								<Bed className="w-10 h-10 text-neutral-300" strokeWidth={1.5} />
 							</div>
 							<p className="text-lg font-light tracking-wide text-neutral-200">
 								これから寝る
@@ -671,7 +675,7 @@ export default function SleepTracker() {
 						{records.length === 0 ? (
 							<div className="text-center py-16 text-neutral-600">
 								<div className="w-16 h-16 mx-auto mb-4 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center">
-									<Moon
+									<ChartNoAxesGantt
 										className="w-8 h-8 text-neutral-700"
 										strokeWidth={1.5}
 									/>
