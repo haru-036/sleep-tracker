@@ -3,3 +3,12 @@
 :root {
 	color-scheme: dark;
 }
+
+input[type="time"] {
+	position: relative;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+	position: absolute;
+	opacity: 0;
+}

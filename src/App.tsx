@@ -6,6 +6,7 @@ import {
 	Coffee,
 	Moon,
 	Pill,
+	RotateCw,
 	Sun,
 	X,
 } from "lucide-react";
@@ -272,16 +273,32 @@ export default function SleepTracker() {
 									/>
 								</div>
 
-								<div className="space-y-3">
+								<div className="space-y-1">
 									<p className="text-neutral-400 text-xs tracking-wide">
 										就寝時間
 									</p>
-									<p className="text-5xl font-light text-neutral-100 tracking-tight">
-										{pendingBedTime?.time}
-									</p>
+									<input
+										type="time"
+										className="text-5xl font-light text-neutral-100 tracking-tight text-center h-18"
+										value={pendingBedTime?.time}
+										onChange={(event) =>
+											setPendingBedTime((prev) => ({
+												// biome-ignore lint/style/noNonNullAssertion: OK here
+												...prev!,
+												time: event.target.value,
+											}))
+										}
+									/>
 									<p className="text-neutral-500 text-xs">
 										({calculateMinutesUntilBed()}分後)
 									</p>
+									<button
+										type="button"
+										className="mt-1 p-2.5 inline-flex items-center justify-center text-neutral-400 hover:text-neutral-200 transition-colors"
+										onClick={handleGoingToBed}
+									>
+										<RotateCw size={16} />
+									</button>
 								</div>
 							</div>
 						</div>
