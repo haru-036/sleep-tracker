@@ -4,7 +4,12 @@ import type { SleepRecord } from "../types/sleep";
 interface RecordsListProps {
 	records: SleepRecord[];
 	formatDate: (dateStr: string) => string;
-	calculateSleepDuration: (bedTime: string, wakeTime: string) => string | null;
+	calculateSleepDuration: (
+		bedDate: string,
+		bedTime: string,
+		wakeDate: string,
+		wakeTime: string,
+	) => string | null;
 }
 
 export function RecordsList({
@@ -35,10 +40,15 @@ export function RecordsList({
 				>
 					<div className="flex items-center justify-between mb-4">
 						<p className="text-sm text-neutral-400 tracking-wide">
-							{formatDate(record.date)}
+							{formatDate(record.wakeDate)}
 						</p>
 						<span className="text-xs text-neutral-500 tracking-wide">
-							{calculateSleepDuration(record.bedTime, record.wakeTime)}
+							{calculateSleepDuration(
+								record.bedDate,
+								record.bedTime,
+								record.wakeDate,
+								record.wakeTime,
+							)}
 						</span>
 					</div>
 

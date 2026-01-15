@@ -1,6 +1,7 @@
 export interface SleepRecord {
 	id: string;
-	date: string; // YYYY-MM-DD
+	bedDate: string; // 就寝日 YYYY-MM-DD
+	wakeDate: string; // 起床日 YYYY-MM-DD
 	bedTime: string; // HH:MM
 	wakeTime: string; // HH:MM
 	hasCaffeine: boolean;
@@ -11,7 +12,8 @@ export interface SleepRecord {
 
 // フォーム用。id なしで保存時に付与する
 export interface SleepRecordInput {
-	date: string;
+	bedDate: string;
+	wakeDate: string;
 	bedTime: string;
 	wakeTime: string;
 	hasCaffeine: boolean;

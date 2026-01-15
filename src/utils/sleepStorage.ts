@@ -39,7 +39,7 @@ export function loadSleepRecords(): SleepRecord[] {
 
 	// 新しい日付が上に来るようにソート
 	return records.sort(
-		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+		(a, b) => new Date(b.wakeDate).getTime() - new Date(a.wakeDate).getTime(),
 	);
 }
 
@@ -47,7 +47,7 @@ export function saveSleepRecord(record: SleepRecord): void {
 	if (!hasStorage()) return;
 	try {
 		window.localStorage.setItem(
-			`${SLEEP_PREFIX}${record.date}`,
+			`${SLEEP_PREFIX}${record.wakeDate}`,
 			JSON.stringify(record),
 		);
 	} catch {

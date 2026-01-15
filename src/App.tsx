@@ -6,12 +6,15 @@ import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
 import { SleepForm } from "./components/SleepForm";
 import { SleepWaitingScreen } from "./components/SleepWaitingScreen";
+import type { ModalType, ScreenType } from "./types/screen";
 import type {
 	PendingBedTime,
 	PendingMedication,
 	SleepRecord,
 	SleepRecordInput,
 } from "./types/sleep";
+import { deriveScreen } from "./utils/screenResolver";
+import { getLocalDateString } from "./utils/timeUtils";
 import {
 	clearPendingBedTime,
 	clearPendingMedication,
@@ -24,18 +27,16 @@ import {
 } from "./utils/sleepStorage";
 
 export default function SleepTracker() {
+	// データ（永続化対象）
 	const [records, setRecords] = useState<SleepRecord[]>([]);
-	const [showForm, setShowForm] = useState(false);
-	const [showSleepScreen, setShowSleepScreen] = useState(false);
-	const [showMedicationModal, setShowMedicationModal] = useState(false);
-	const [tempMedicationTime, setTempMedicationTime] = useState("");
 	const [pendingBedTime, setPendingBedTime] = useState<PendingBedTime | null>(
 		null,
 	);
 	const [pendingMedication, setPendingMedication] =
 		useState<PendingMedication | null>(null);
 	const [currentRecord, setCurrentRecord] = useState<SleepRecordInput>({
-		date: new Date().toISOString().split("T")[0],
+		bedDate: "",
+		wakeDate: getLocalDateString(),
 		bedTime: "",
 		wakeTime: "",
 		hasCaffeine: false,
@@ -44,29 +45,59 @@ export default function SleepTracker() {
 		hasBath: false,
 	});
 
+	// UI状態
+	const [manualScreen, setManualScreen] = useState<ScreenType | null>(null);
+	const [activeModal, setActiveModal] = useState<ModalType>(null);
+	const [tempMedicationTime, setTempMedicationTime] = useState("");
+
+	// 画面決定（派生）
+	const autoScreen = deriveScreen(pendingBedTime);
+	const screen = manualScreen ?? autoScreen;
+
 	// Load records from storage on mount
 	useEffect(() => {
-		const loaded = loadSleepRecords();
-		setRecords(loaded);
-
-		const pendingBed = loadPendingBedTime();
-		if (pendingBed) {
-			setPendingBedTime(pendingBed);
-			setShowSleepScreen(true);
-		}
-
-		const pendingMed = loadPendingMedication();
-		if (pendingMed) {
-			setPendingMedication(pendingMed);
-		}
+		setRecords(loadSleepRecords());
+		setPendingBedTime(loadPendingBedTime());
+		setPendingMedication(loadPendingMedication());
 	}, []);
+
+	// 画面が自動でformに遷移した場合、currentRecordを初期化
+	useEffect(() => {
+		if (screen === "form" && pendingBedTime && !manualScreen) {
+			const now = new Date();
+			setCurrentRecord({
+				bedDate: pendingBedTime.date,
+				wakeDate: getLocalDateString(now),
+				bedTime: pendingBedTime.time,
+				wakeTime: now.toTimeString().slice(0, 5),
+				hasCaffeine: false,
+				hasMedication: !!pendingMedication,
+				medicationTime: pendingMedication?.time ?? "",
+				hasBath: false,
+			});
+		}
+	}, [screen, pendingBedTime, pendingMedication, manualScreen]);
 
 	const handlePendingBedTimeChange = (value: string) => {
 		setPendingBedTime((prev) => (prev ? { ...prev, time: value } : prev));
 	};
 
 	const handleRecordChange = (nextRecord: SleepRecordInput) => {
+		// bedTimeが変更された場合、bedDateを自動計算（24時間以上寝ることはない前提）
+		if (nextRecord.bedTime && nextRecord.wakeTime && nextRecord.wakeDate) {
+			const bedDate =
+				nextRecord.bedTime > nextRecord.wakeTime
+					? getPreviousDate(nextRecord.wakeDate)
+					: nextRecord.wakeDate;
+			nextRecord = { ...nextRecord, bedDate };
+		}
 		setCurrentRecord(nextRecord);
+	};
+
+	const getPreviousDate = (dateStr: string): string => {
+		const date = new Date(dateStr);
+		date.setDate(date.getDate() - 1);
+		return getLocalDateString(date);
 	};
 
 	const handleGoingToBed = async () => {
@@ -87,7 +118,7 @@ export default function SleepTracker() {
 		}
 
 		const bedTime = futureTime.toTimeString().slice(0, 5);
-		const bedDate = now.toISOString().split("T")[0];
+		const bedDate = getLocalDateString(now);
 
 		const bedTimeData = {
 			time: bedTime,
@@ -96,7 +127,7 @@ export default function SleepTracker() {
 		};
 
 		setPendingBedTime(bedTimeData);
-		setShowSleepScreen(true);
+		setManualScreen(null); // 自動決定に戻す
 		savePendingBedTime(bedTimeData);
 	};
 
@@ -106,24 +137,24 @@ export default function SleepTracker() {
 		setTempMedicationTime(
 			pendingMedication ? pendingMedication.time : medicationTime,
 		);
-		setShowMedicationModal(true);
+		setActiveModal("medication");
 	};
 
 	const handleOpenFormMedicationModal = () => {
 		setTempMedicationTime(
 			currentRecord.medicationTime || new Date().toTimeString().slice(0, 5),
 		);
-		setShowMedicationModal(true);
+		setActiveModal("medication");
 	};
 
 	const handleSaveMedication = async () => {
 		// If we're in the form, update the current record
-		if (showForm) {
+		if (screen === "form") {
 			setCurrentRecord({
 				...currentRecord,
 				medicationTime: tempMedicationTime,
 			});
-			setShowMedicationModal(false);
+			setActiveModal(null);
 			return;
 		}
 
@@ -134,23 +165,25 @@ export default function SleepTracker() {
 		};
 
 		setPendingMedication(medData);
-		setShowMedicationModal(false);
+		setActiveModal(null);
 		savePendingMedication(medData);
 	};
 
 	const handleClearMedication = async () => {
 		setPendingMedication(null);
-		setShowMedicationModal(false);
+		setActiveModal(null);
 		clearPendingMedication();
 	};
 
 	const handleWakeUp = () => {
 		const now = new Date();
 		const currentTime = now.toTimeString().slice(0, 5);
+		const wakeDate = getLocalDateString(now);
 
 		if (pendingBedTime) {
 			setCurrentRecord({
-				date: pendingBedTime.date,
+				bedDate: pendingBedTime.date,
+				wakeDate: wakeDate,
 				bedTime: pendingBedTime.time,
 				wakeTime: currentTime,
 				hasCaffeine: false,
@@ -158,10 +191,29 @@ export default function SleepTracker() {
 				medicationTime: pendingMedication ? pendingMedication.time : "",
 				hasBath: false,
 			});
+		} else {
+			// 手動で+ボタンから開いた場合
+			setCurrentRecord({
+				bedDate: "",
+				wakeDate: wakeDate,
+				bedTime: "",
+				wakeTime: currentTime,
+				hasCaffeine: false,
+				hasMedication: false,
+				medicationTime: "",
+				hasBath: false,
+			});
 		}
 
-		setShowSleepScreen(false);
-		setShowForm(true);
+		setManualScreen("form");
+	};
+
+	const handleCloseWaitingScreen = () => {
+		setManualScreen("home");
+	};
+
+	const handleCancelForm = () => {
+		setManualScreen("home");
 	};
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -174,8 +226,12 @@ export default function SleepTracker() {
 
 		// Update records in state
 		setRecords(
-			[newRecord, ...records.filter((r) => r.date !== newRecord.date)].sort(
-				(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+			[
+				newRecord,
+				...records.filter((r) => r.wakeDate !== newRecord.wakeDate),
+			].sort(
+				(a, b) =>
+					new Date(b.wakeDate).getTime() - new Date(a.wakeDate).getTime(),
 			),
 		);
 
@@ -186,10 +242,10 @@ export default function SleepTracker() {
 		clearPendingBedTime();
 		clearPendingMedication();
 
-		setShowForm(false);
-		setShowSleepScreen(false);
+		setManualScreen(null); // 自動決定に戻す
 		setCurrentRecord({
-			date: new Date().toISOString().split("T")[0],
+			bedDate: "",
+			wakeDate: getLocalDateString(),
 			bedTime: "",
 			wakeTime: "",
 			hasCaffeine: false,
@@ -200,25 +256,21 @@ export default function SleepTracker() {
 	};
 
 	const calculateSleepDuration = (
+		bedDate: string,
 		bedTime: string,
+		wakeDate: string,
 		wakeTime: string,
 	): string | null => {
-		if (!bedTime || !wakeTime) return null;
+		if (!bedDate || !bedTime || !wakeDate || !wakeTime) return null;
 
-		const [bedHour, bedMin] = bedTime.split(":").map(Number);
-		const [wakeHour, wakeMin] = wakeTime.split(":").map(Number);
+		const bedDateTime = new Date(`${bedDate}T${bedTime}:00`);
+		const wakeDateTime = new Date(`${wakeDate}T${wakeTime}:00`);
 
-		const bedMinutes = bedHour * 60 + bedMin;
-		let wakeMinutes = wakeHour * 60 + wakeMin;
+		const durationMs = wakeDateTime.getTime() - bedDateTime.getTime();
+		const durationMinutes = Math.floor(durationMs / (1000 * 60));
 
-		// If wake time is earlier, assume it's next day
-		if (wakeMinutes < bedMinutes) {
-			wakeMinutes += 24 * 60;
-		}
-
-		const duration = wakeMinutes - bedMinutes;
-		const hours = Math.floor(duration / 60);
-		const minutes = duration % 60;
+		const hours = Math.floor(durationMinutes / 60);
+		const minutes = durationMinutes % 60;
 
 		return `${hours}h ${minutes}m`;
 	};
@@ -260,12 +312,12 @@ export default function SleepTracker() {
 	};
 
 	return (
-		<div className="min-h-screen bg-neutral-950 text-neutral-100 relative">
-			{showSleepScreen && !showForm && pendingBedTime && (
+		<div className="min-h-svh bg-neutral-950 text-neutral-100 relative">
+			{screen === "sleeping" && pendingBedTime && (
 				<SleepWaitingScreen
 					pendingBedTime={pendingBedTime}
 					minutesUntilBed={calculateMinutesUntilBed()}
-					onClose={() => setShowSleepScreen(false)}
+					onClose={handleCloseWaitingScreen}
 					onRefresh={handleGoingToBed}
 					onTimeChange={handlePendingBedTimeChange}
 					onWakeUp={handleWakeUp}
@@ -276,13 +328,13 @@ export default function SleepTracker() {
 			<div className="max-w-2xl mx-auto px-6 py-12">
 				{/* Header */}
 				<div className="mb-16">
-					{!showForm ? (
+					{screen !== "form" ? (
 						<>
 							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
 								zzz...
 							</h1>
 							<p className="text-neutral-500 text-sm tracking-wide">
-								{formatDateFull(currentRecord.date)}
+								{formatDateFull(currentRecord.wakeDate)}
 							</p>
 						</>
 					) : (
@@ -290,62 +342,69 @@ export default function SleepTracker() {
 							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
 								睡眠記録
 							</h1>
-							<p className="text-neutral-400 text-sm tracking-wide">
-								{formatDateFull(currentRecord.date)}
-							</p>
+							<input
+								type="date"
+								value={currentRecord.wakeDate}
+								onChange={(e) =>
+									handleRecordChange({
+										...currentRecord,
+										wakeDate: e.target.value,
+									})
+								}
+								className="text-neutral-400 text-sm tracking-wide bg-transparent border-none outline-none cursor-pointer"
+							/>
 						</>
 					)}
 				</div>
 
 				{/* Medication Modal */}
 				<MedicationModal
-					isOpen={showMedicationModal}
+					isOpen={activeModal === "medication"}
 					tempMedicationTime={tempMedicationTime}
 					onTimeChange={setTempMedicationTime}
-					onClose={() => setShowMedicationModal(false)}
+					onClose={() => setActiveModal(null)}
 					onSave={handleSaveMedication}
 					onClear={
-						!showForm && pendingMedication ? handleClearMedication : undefined
+						screen !== "form" && pendingMedication
+							? handleClearMedication
+							: undefined
 					}
-					showClearButton={!showForm && !!pendingMedication}
+					showClearButton={screen !== "form" && !!pendingMedication}
 				/>
 
-				{/* Going to Bed Button */}
-				{!showForm && !showSleepScreen && (
-					<PreSleepActions
-						pendingMedication={pendingMedication}
-						onMedicationClick={handleTakeMedication}
-						onGoingToBed={handleGoingToBed}
-					/>
+				{/* Home Screen */}
+				{screen === "home" && (
+					<>
+						<PreSleepActions
+							pendingMedication={pendingMedication}
+							onMedicationClick={handleTakeMedication}
+							onGoingToBed={handleGoingToBed}
+						/>
+
+						<button
+							type="button"
+							className="fixed bottom-5 right-5 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
+							onClick={handleWakeUp}
+						>
+							<Plus className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
+						</button>
+
+						<RecordsList
+							records={records}
+							formatDate={formatDate}
+							calculateSleepDuration={calculateSleepDuration}
+						/>
+					</>
 				)}
 
-				{!showForm && !showSleepScreen && (
-					<button
-						type="button"
-						className="fixed bottom-5 right-5 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
-						onClick={handleWakeUp}
-					>
-						<Plus className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
-					</button>
-				)}
-
-				{/* Form */}
-				{showForm && (
+				{/* Form Screen */}
+				{screen === "form" && (
 					<SleepForm
 						currentRecord={currentRecord}
 						onChange={handleRecordChange}
 						onSubmit={handleSubmit}
-						onCancel={() => setShowForm(false)}
+						onCancel={handleCancelForm}
 						onMedicationTimeClick={handleOpenFormMedicationModal}
-					/>
-				)}
-
-				{/* Records List */}
-				{!showForm && !showSleepScreen && (
-					<RecordsList
-						records={records}
-						formatDate={formatDate}
-						calculateSleepDuration={calculateSleepDuration}
 					/>
 				)}
 			</div>
