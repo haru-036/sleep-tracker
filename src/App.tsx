@@ -13,8 +13,9 @@ import type {
 	SleepRecord,
 	SleepRecordInput,
 } from "./types/sleep";
+import { formatDate, formatDateFull } from "./utils/dateFormat";
 import { deriveScreen } from "./utils/screenResolver";
-import { getLocalDateString } from "./utils/timeUtils";
+import { calculateSleepDuration } from "./utils/sleepCalculation";
 import {
 	clearPendingBedTime,
 	clearPendingMedication,
@@ -25,6 +26,7 @@ import {
 	savePendingMedication,
 	saveSleepRecord,
 } from "./utils/sleepStorage";
+import { getLocalDateString, getPreviousDate } from "./utils/timeUtils";
 
 export default function SleepTracker() {
 	// データ（永続化対象）
@@ -92,12 +94,6 @@ export default function SleepTracker() {
 			nextRecord = { ...nextRecord, bedDate };
 		}
 		setCurrentRecord(nextRecord);
-	};
-
-	const getPreviousDate = (dateStr: string): string => {
-		const date = new Date(dateStr);
-		date.setDate(date.getDate() - 1);
-		return getLocalDateString(date);
 	};
 
 	const handleGoingToBed = async () => {
@@ -255,26 +251,6 @@ export default function SleepTracker() {
 		});
 	};
 
-	const calculateSleepDuration = (
-		bedDate: string,
-		bedTime: string,
-		wakeDate: string,
-		wakeTime: string,
-	): string | null => {
-		if (!bedDate || !bedTime || !wakeDate || !wakeTime) return null;
-
-		const bedDateTime = new Date(`${bedDate}T${bedTime}:00`);
-		const wakeDateTime = new Date(`${wakeDate}T${wakeTime}:00`);
-
-		const durationMs = wakeDateTime.getTime() - bedDateTime.getTime();
-		const durationMinutes = Math.floor(durationMs / (1000 * 60));
-
-		const hours = Math.floor(durationMinutes / 60);
-		const minutes = durationMinutes % 60;
-
-		return `${hours}h ${minutes}m`;
-	};
-
 	const calculateMinutesUntilBed = () => {
 		if (!pendingBedTime) return 0;
 
@@ -287,28 +263,6 @@ export default function SleepTracker() {
 		const diffMinutes = Math.round(diffMs / (1000 * 60));
 
 		return diffMinutes > 0 ? diffMinutes : 0;
-	};
-
-	const formatDate = (dateStr: string): string => {
-		const date = new Date(dateStr);
-		const jstDate = new Date(
-			date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
-		);
-		const month = jstDate.getMonth() + 1;
-		const day = jstDate.getDate();
-		return `${month}/${day}`;
-	};
-
-	const formatDateFull = (dateStr: string): string => {
-		const date = new Date(dateStr);
-		const jstDate = new Date(
-			date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
-		);
-		const month = jstDate.getMonth() + 1;
-		const day = jstDate.getDate();
-		const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-		const weekday = weekdays[jstDate.getDay()];
-		return `${month}月${day}日 (${weekday})`;
 	};
 
 	return (
@@ -334,7 +288,7 @@ export default function SleepTracker() {
 								zzz...
 							</h1>
 							<p className="text-neutral-500 text-sm tracking-wide">
-								{formatDateFull(currentRecord.wakeDate)}
+								{formatDateFull(getLocalDateString())}
 							</p>
 						</>
 					) : (

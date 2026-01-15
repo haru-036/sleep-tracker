@@ -17,3 +17,10 @@ export function getLocalDateString(date = new Date()): string {
 	const day = String(date.getDate()).padStart(2, "0");
 	return `${year}-${month}-${day}`;
 }
+
+// 前日の日付文字列を取得（YYYY-MM-DD）
+export function getPreviousDate(dateStr: string): string {
+	const date = new Date(dateStr);
+	date.setDate(date.getDate() - 1);
+	return getLocalDateString(date);
+}
