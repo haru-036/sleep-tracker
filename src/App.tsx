@@ -322,7 +322,7 @@ export default function SleepTracker() {
 				{!showForm && !showSleepScreen && (
 					<button
 						type="button"
-						className="absolute bottom-6 right-6 size-12 rounded-full bg-neutral-850 border border-neutral-800 text-neutral-500 hover:border-neutral-700 flex items-center justify-center"
+						className="fixed bottom-5 right-5 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
 						onClick={handleWakeUp}
 					>
 						<Plus className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
