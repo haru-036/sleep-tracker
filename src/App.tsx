@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { MedicationModal } from "./components/MedicationModal";
@@ -281,17 +281,40 @@ export default function SleepTracker() {
 			{/* Main Content */}
 			<div className="max-w-2xl mx-auto px-6 py-12">
 				{/* Header */}
-				<div className="mb-16">
-					{screen !== "form" ? (
-						<>
-							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
-								zzz...
-							</h1>
-							<p className="text-neutral-500 text-sm tracking-wide">
-								{formatDateFull(getLocalDateString())}
-							</p>
-						</>
-					) : (
+				<div className="mb-10">
+					{screen === "home" ? (
+						<div className="flex justify-between items-center">
+							<div>
+								<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
+									zzz...
+								</h1>
+								<p className="text-neutral-500 text-sm tracking-wide">
+									{formatDateFull(getLocalDateString())}
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={handleTakeMedication}
+								className={`flex items-center gap-2 rounded-full transition-colors ${
+									pendingMedication
+										? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
+										: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
+								}`}
+							>
+								<Pill
+									className={`w-4 h-4 ${
+										pendingMedication ? "text-neutral-200" : "text-neutral-400"
+									}`}
+									strokeWidth={1.5}
+								/>
+								{pendingMedication && (
+									<span className="text-sm text-neutral-300 font-light tracking-wide">
+										{pendingMedication.time}
+									</span>
+								)}
+							</button>
+						</div>
+					) : screen === "form" ? (
 						<>
 							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
 								睡眠記録
@@ -307,6 +330,15 @@ export default function SleepTracker() {
 								}
 								className="text-neutral-400 text-sm tracking-wide bg-transparent border-none outline-none cursor-pointer"
 							/>
+						</>
+					) : (
+						<>
+							<h1 className="text-xl font-light tracking-wide mb-2 text-neutral-100">
+								zzz...
+							</h1>
+							<p className="text-neutral-500 text-sm tracking-wide">
+								{formatDateFull(getLocalDateString())}
+							</p>
 						</>
 					)}
 				</div>
@@ -329,11 +361,7 @@ export default function SleepTracker() {
 				{/* Home Screen */}
 				{screen === "home" && (
 					<>
-						<PreSleepActions
-							pendingMedication={pendingMedication}
-							onMedicationClick={handleTakeMedication}
-							onGoingToBed={handleGoingToBed}
-						/>
+						<PreSleepActions onGoingToBed={handleGoingToBed} />
 
 						<button
 							type="button"
