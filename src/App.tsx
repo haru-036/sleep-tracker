@@ -123,7 +123,7 @@ export default function SleepTracker() {
 		};
 
 		setPendingBedTime(bedTimeData);
-		setManualScreen(null); // 自動決定に戻す
+		setManualScreen("sleeping"); // 待機画面へ遷移
 		savePendingBedTime(bedTimeData);
 	};
 
