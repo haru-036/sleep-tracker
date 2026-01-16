@@ -416,7 +416,7 @@ export default function SleepTracker() {
 										wakeDate: e.target.value,
 									})
 								}
-								className="text-neutral-400 text-sm tracking-wide bg-transparent border-none outline-none cursor-pointer"
+								className="text-neutral-400 p-0 appearance-none text-sm tracking-wide bg-transparent border-none outline-none cursor-pointer"
 							/>
 						</>
 					) : (
