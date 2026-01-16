@@ -5,6 +5,7 @@ export interface SleepRecord {
 	bedTime: string; // HH:MM
 	wakeTime: string; // HH:MM
 	hasCaffeine: boolean;
+	caffeineTime: string;
 	hasMedication: boolean;
 	medicationTime: string;
 	hasBath: boolean;
@@ -17,6 +18,7 @@ export interface SleepRecordInput {
 	bedTime: string;
 	wakeTime: string;
 	hasCaffeine: boolean;
+	caffeineTime: string;
 	hasMedication: boolean;
 	medicationTime: string;
 	hasBath: boolean;
@@ -29,6 +31,11 @@ export interface PendingBedTime {
 }
 
 export interface PendingMedication {
+	time: string; // HH:MM
+	timestamp: string; // ISO string
+}
+
+export interface PendingCaffeine {
 	time: string; // HH:MM
 	timestamp: string; // ISO string
 }

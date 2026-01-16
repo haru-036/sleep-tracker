@@ -1,5 +1,6 @@
 import type {
 	PendingBedTime,
+	PendingCaffeine,
 	PendingMedication,
 	SleepRecord,
 } from "../types/sleep";
@@ -7,6 +8,7 @@ import type {
 const SLEEP_PREFIX = "sleep:";
 const PENDING_BED_KEY = "pending-bed-time";
 const PENDING_MED_KEY = "pending-medication";
+const PENDING_CAFFEINE_KEY = "pending-caffeine";
 
 function hasStorage(): boolean {
 	return (
@@ -108,6 +110,35 @@ export function clearPendingMedication(): void {
 	if (!hasStorage()) return;
 	try {
 		window.localStorage.removeItem(PENDING_MED_KEY);
+	} catch {
+		// ignore
+	}
+}
+
+export function loadPendingCaffeine(): PendingCaffeine | null {
+	if (!hasStorage()) return null;
+	try {
+		const raw = window.localStorage.getItem(PENDING_CAFFEINE_KEY);
+		if (!raw) return null;
+		return JSON.parse(raw) as PendingCaffeine;
+	} catch {
+		return null;
+	}
+}
+
+export function savePendingCaffeine(value: PendingCaffeine): void {
+	if (!hasStorage()) return;
+	try {
+		window.localStorage.setItem(PENDING_CAFFEINE_KEY, JSON.stringify(value));
+	} catch {
+		// ignore
+	}
+}
+
+export function clearPendingCaffeine(): void {
+	if (!hasStorage()) return;
+	try {
+		window.localStorage.removeItem(PENDING_CAFFEINE_KEY);
 	} catch {
 		// ignore
 	}

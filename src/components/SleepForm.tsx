@@ -8,6 +8,7 @@ interface SleepFormProps {
 	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 	onCancel: () => void;
 	onMedicationTimeClick: () => void;
+	onCaffeineTimeClick: () => void;
 }
 
 export function SleepForm({
@@ -16,6 +17,7 @@ export function SleepForm({
 	onSubmit,
 	onCancel,
 	onMedicationTimeClick,
+	onCaffeineTimeClick,
 }: SleepFormProps) {
 	const updateRecord = (updates: Partial<SleepRecordInput>) => {
 		onChange({ ...currentRecord, ...updates });
@@ -24,6 +26,12 @@ export function SleepForm({
 	const handleMedicationTimeClick = () => {
 		if (currentRecord.hasMedication) {
 			onMedicationTimeClick();
+		}
+	};
+
+	const handleCaffeineTimeClick = () => {
+		if (currentRecord.hasCaffeine) {
+			onCaffeineTimeClick();
 		}
 	};
 
@@ -76,13 +84,28 @@ export function SleepForm({
 
 				<div className="space-y-6">
 					<div className="flex items-center justify-between">
-						<label
-							htmlFor="coffee-input"
-							className="flex items-center gap-2 text-sm text-neutral-300 tracking-wide"
-						>
-							<Coffee className="w-4 h-4" strokeWidth={1.5} />
-							コーヒー
-						</label>
+						<div className="flex items-center gap-3">
+							<div className="flex items-center gap-2">
+								<Coffee
+									className="w-4 h-4 text-neutral-300"
+									strokeWidth={1.5}
+								/>
+								<span className="text-sm text-neutral-300 tracking-wide">
+									コーヒー
+								</span>
+							</div>
+							<button
+								type="button"
+								onClick={handleCaffeineTimeClick}
+								className={`text-sm tracking-wide transition-colors ${
+									currentRecord.hasCaffeine
+										? "text-neutral-300 hover:text-neutral-100"
+										: "text-neutral-600"
+								}`}
+							>
+								{currentRecord.caffeineTime || "--:--"}
+							</button>
+						</div>
 						<div className="flex gap-2">
 							<button
 								type="button"

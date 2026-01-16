@@ -1,8 +1,10 @@
 import { X } from "lucide-react";
 
-interface MedicationModalProps {
+interface TimeInputModalProps {
 	isOpen: boolean;
-	tempMedicationTime: string;
+	title: string;
+	label: string;
+	time: string;
 	onTimeChange: (value: string) => void;
 	onClose: () => void;
 	onSave: () => void;
@@ -10,15 +12,17 @@ interface MedicationModalProps {
 	showClearButton?: boolean;
 }
 
-export function MedicationModal({
+export function TimeInputModal({
 	isOpen,
-	tempMedicationTime,
+	title,
+	label,
+	time,
 	onTimeChange,
 	onClose,
 	onSave,
 	onClear,
 	showClearButton = false,
-}: MedicationModalProps) {
+}: TimeInputModalProps) {
 	if (!isOpen) return null;
 
 	return (
@@ -51,20 +55,20 @@ export function MedicationModal({
 				</button>
 
 				<h3 className="text-lg font-light text-neutral-200 mb-6 text-center">
-					眠剤
+					{title}
 				</h3>
 
 				<div className="mb-6">
 					<label
-						htmlFor="medication-time-input"
+						htmlFor="time-input"
 						className="text-xs text-neutral-400 mb-2 block tracking-wide"
 					>
-						服用時間
+						{label}
 					</label>
 					<input
 						type="time"
-						id="medication-time-input"
-						value={tempMedicationTime}
+						id="time-input"
+						value={time}
 						onChange={(event) => onTimeChange(event.target.value)}
 						className="w-full max-w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-neutral-100 rounded-2xl focus:border-neutral-600 focus:outline-none text-xl font-light text-center appearance-none [-webkit-appearance:none]"
 						style={{ boxSizing: "border-box" }}

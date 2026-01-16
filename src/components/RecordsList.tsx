@@ -70,6 +70,9 @@ export function RecordsList({
 							{record.hasCaffeine && (
 								<span className="inline-flex items-center gap-1 text-xs bg-neutral-800 text-neutral-400 px-2 py-1 rounded-full">
 									<Coffee className="w-3 h-3" strokeWidth={1.5} />
+									{record.caffeineTime && (
+										<span className="ml-1">{record.caffeineTime}</span>
+									)}
 								</span>
 							)}
 							{record.hasBath && (

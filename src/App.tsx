@@ -1,14 +1,15 @@
-import { Pill, Plus } from "lucide-react";
+import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { MedicationModal } from "./components/MedicationModal";
 import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
 import { SleepForm } from "./components/SleepForm";
 import { SleepWaitingScreen } from "./components/SleepWaitingScreen";
+import { TimeInputModal } from "./components/TimeInputModal";
 import type { ModalType, ScreenType } from "./types/screen";
 import type {
 	PendingBedTime,
+	PendingCaffeine,
 	PendingMedication,
 	SleepRecord,
 	SleepRecordInput,
@@ -18,11 +19,14 @@ import { deriveScreen } from "./utils/screenResolver";
 import { calculateSleepDuration } from "./utils/sleepCalculation";
 import {
 	clearPendingBedTime,
+	clearPendingCaffeine,
 	clearPendingMedication,
 	loadPendingBedTime,
+	loadPendingCaffeine,
 	loadPendingMedication,
 	loadSleepRecords,
 	savePendingBedTime,
+	savePendingCaffeine,
 	savePendingMedication,
 	saveSleepRecord,
 } from "./utils/sleepStorage";
@@ -36,12 +40,15 @@ export default function SleepTracker() {
 	);
 	const [pendingMedication, setPendingMedication] =
 		useState<PendingMedication | null>(null);
+	const [pendingCaffeine, setPendingCaffeine] =
+		useState<PendingCaffeine | null>(null);
 	const [currentRecord, setCurrentRecord] = useState<SleepRecordInput>({
 		bedDate: "",
 		wakeDate: getLocalDateString(),
 		bedTime: "",
 		wakeTime: "",
 		hasCaffeine: false,
+		caffeineTime: "",
 		hasMedication: false,
 		medicationTime: "",
 		hasBath: false,
@@ -51,6 +58,7 @@ export default function SleepTracker() {
 	const [manualScreen, setManualScreen] = useState<ScreenType | null>(null);
 	const [activeModal, setActiveModal] = useState<ModalType>(null);
 	const [tempMedicationTime, setTempMedicationTime] = useState("");
+	const [tempCaffeineTime, setTempCaffeineTime] = useState("");
 
 	// 画面決定（派生）
 	const autoScreen = deriveScreen(pendingBedTime);
@@ -61,6 +69,7 @@ export default function SleepTracker() {
 		setRecords(loadSleepRecords());
 		setPendingBedTime(loadPendingBedTime());
 		setPendingMedication(loadPendingMedication());
+		setPendingCaffeine(loadPendingCaffeine());
 	}, []);
 
 	// 画面が自動でformに遷移した場合、currentRecordを初期化
@@ -72,13 +81,20 @@ export default function SleepTracker() {
 				wakeDate: getLocalDateString(now),
 				bedTime: pendingBedTime.time,
 				wakeTime: now.toTimeString().slice(0, 5),
-				hasCaffeine: false,
+				hasCaffeine: !!pendingCaffeine,
+				caffeineTime: pendingCaffeine?.time ?? "",
 				hasMedication: !!pendingMedication,
 				medicationTime: pendingMedication?.time ?? "",
 				hasBath: false,
 			});
 		}
-	}, [screen, pendingBedTime, pendingMedication, manualScreen]);
+	}, [
+		screen,
+		pendingBedTime,
+		pendingMedication,
+		pendingCaffeine,
+		manualScreen,
+	]);
 
 	const handlePendingBedTimeChange = (value: string) => {
 		setPendingBedTime((prev) => (prev ? { ...prev, time: value } : prev));
@@ -171,6 +187,48 @@ export default function SleepTracker() {
 		clearPendingMedication();
 	};
 
+	const handleTakeCoffee = () => {
+		const now = new Date();
+		const caffeineTime = now.toTimeString().slice(0, 5);
+		setTempCaffeineTime(pendingCaffeine ? pendingCaffeine.time : caffeineTime);
+		setActiveModal("caffeine");
+	};
+
+	const handleOpenFormCaffeineModal = () => {
+		setTempCaffeineTime(
+			currentRecord.caffeineTime || new Date().toTimeString().slice(0, 5),
+		);
+		setActiveModal("caffeine");
+	};
+
+	const handleSaveCaffeine = async () => {
+		// If we're in the form, update the current record
+		if (screen === "form") {
+			setCurrentRecord({
+				...currentRecord,
+				caffeineTime: tempCaffeineTime,
+			});
+			setActiveModal(null);
+			return;
+		}
+
+		// Otherwise, save as pending caffeine (for main screen)
+		const caffeineData = {
+			time: tempCaffeineTime,
+			timestamp: new Date().toISOString(),
+		};
+
+		setPendingCaffeine(caffeineData);
+		setActiveModal(null);
+		savePendingCaffeine(caffeineData);
+	};
+
+	const handleClearCaffeine = async () => {
+		setPendingCaffeine(null);
+		setActiveModal(null);
+		clearPendingCaffeine();
+	};
+
 	const handleWakeUp = () => {
 		const now = new Date();
 		const currentTime = now.toTimeString().slice(0, 5);
@@ -182,7 +240,8 @@ export default function SleepTracker() {
 				wakeDate: wakeDate,
 				bedTime: pendingBedTime.time,
 				wakeTime: currentTime,
-				hasCaffeine: false,
+				hasCaffeine: !!pendingCaffeine,
+				caffeineTime: pendingCaffeine ? pendingCaffeine.time : "",
 				hasMedication: !!pendingMedication,
 				medicationTime: pendingMedication ? pendingMedication.time : "",
 				hasBath: false,
@@ -195,6 +254,7 @@ export default function SleepTracker() {
 				bedTime: "",
 				wakeTime: currentTime,
 				hasCaffeine: false,
+				caffeineTime: "",
 				hasMedication: false,
 				medicationTime: "",
 				hasBath: false,
@@ -234,9 +294,11 @@ export default function SleepTracker() {
 		// Clear pending data
 		setPendingBedTime(null);
 		setPendingMedication(null);
+		setPendingCaffeine(null);
 		saveSleepRecord(newRecord);
 		clearPendingBedTime();
 		clearPendingMedication();
+		clearPendingCaffeine();
 
 		setManualScreen(null); // 自動決定に戻す
 		setCurrentRecord({
@@ -245,6 +307,7 @@ export default function SleepTracker() {
 			bedTime: "",
 			wakeTime: "",
 			hasCaffeine: false,
+			caffeineTime: "",
 			hasMedication: false,
 			medicationTime: "",
 			hasBath: false,
@@ -292,27 +355,52 @@ export default function SleepTracker() {
 									{formatDateFull(getLocalDateString())}
 								</p>
 							</div>
-							<button
-								type="button"
-								onClick={handleTakeMedication}
-								className={`flex items-center gap-2 rounded-full transition-colors ${
-									pendingMedication
-										? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
-										: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
-								}`}
-							>
-								<Pill
-									className={`w-4 h-4 ${
-										pendingMedication ? "text-neutral-200" : "text-neutral-400"
+							<div className="flex gap-2">
+								<button
+									type="button"
+									onClick={handleTakeCoffee}
+									className={`flex items-center gap-2 rounded-full transition-colors ${
+										pendingCaffeine
+											? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
+											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
 									}`}
-									strokeWidth={1.5}
-								/>
-								{pendingMedication && (
-									<span className="text-sm text-neutral-300 font-light tracking-wide">
-										{pendingMedication.time}
-									</span>
-								)}
-							</button>
+								>
+									<Coffee
+										className={`w-4 h-4 ${
+											pendingCaffeine ? "text-neutral-200" : "text-neutral-400"
+										}`}
+										strokeWidth={1.5}
+									/>
+									{pendingCaffeine && (
+										<span className="text-sm text-neutral-300 font-light tracking-wide">
+											{pendingCaffeine.time}
+										</span>
+									)}
+								</button>
+								<button
+									type="button"
+									onClick={handleTakeMedication}
+									className={`flex items-center gap-2 rounded-full transition-colors ${
+										pendingMedication
+											? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
+											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
+									}`}
+								>
+									<Pill
+										className={`w-4 h-4 ${
+											pendingMedication
+												? "text-neutral-200"
+												: "text-neutral-400"
+										}`}
+										strokeWidth={1.5}
+									/>
+									{pendingMedication && (
+										<span className="text-sm text-neutral-300 font-light tracking-wide">
+											{pendingMedication.time}
+										</span>
+									)}
+								</button>
+							</div>
 						</div>
 					) : screen === "form" ? (
 						<>
@@ -343,10 +431,12 @@ export default function SleepTracker() {
 					)}
 				</div>
 
-				{/* Medication Modal */}
-				<MedicationModal
+				{/* Time Input Modals */}
+				<TimeInputModal
 					isOpen={activeModal === "medication"}
-					tempMedicationTime={tempMedicationTime}
+					title="眠剤"
+					label="服用時間"
+					time={tempMedicationTime}
 					onTimeChange={setTempMedicationTime}
 					onClose={() => setActiveModal(null)}
 					onSave={handleSaveMedication}
@@ -357,6 +447,21 @@ export default function SleepTracker() {
 					}
 					showClearButton={screen !== "form" && !!pendingMedication}
 				/>
+				<TimeInputModal
+					isOpen={activeModal === "caffeine"}
+					title="コーヒー"
+					label="摂取時間"
+					time={tempCaffeineTime}
+					onTimeChange={setTempCaffeineTime}
+					onClose={() => setActiveModal(null)}
+					onSave={handleSaveCaffeine}
+					onClear={
+						screen !== "form" && pendingCaffeine
+							? handleClearCaffeine
+							: undefined
+					}
+					showClearButton={screen !== "form" && !!pendingCaffeine}
+				/>
 
 				{/* Home Screen */}
 				{screen === "home" && (
@@ -365,7 +470,7 @@ export default function SleepTracker() {
 
 						<button
 							type="button"
-							className="fixed bottom-5 right-5 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
+							className="fixed bottom-8 right-4 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
 							onClick={handleWakeUp}
 						>
 							<Plus className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
@@ -387,6 +492,7 @@ export default function SleepTracker() {
 						onSubmit={handleSubmit}
 						onCancel={handleCancelForm}
 						onMedicationTimeClick={handleOpenFormMedicationModal}
+						onCaffeineTimeClick={handleOpenFormCaffeineModal}
 					/>
 				)}
 			</div>
