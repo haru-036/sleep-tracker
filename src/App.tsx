@@ -1,12 +1,21 @@
+import { Button } from "@/components/ui/button";
 import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	LabelList,
+	XAxis,
+	YAxis,
+} from "recharts";
 import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
 import { SleepForm } from "./components/SleepForm";
 import { SleepWaitingScreen } from "./components/SleepWaitingScreen";
 import { TimeInputModal } from "./components/TimeInputModal";
+import { type ChartConfig, ChartContainer } from "./components/ui/chart";
 import type { ModalType, ScreenType } from "./types/screen";
 import type {
 	PendingBedTime,
@@ -32,6 +41,23 @@ import {
 	saveSleepRecord,
 } from "./utils/sleepStorage";
 import { getLocalDateString, getPreviousDate } from "./utils/timeUtils";
+
+const chartConfig = {
+	grid: {
+		color: "var(--muted)",
+	},
+	label: {
+		color: "var(--muted-foreground)",
+	},
+	xaxis: {
+		label: "Time (Hours)",
+		color: "var(--muted-foreground)",
+	},
+	sleep: {
+		label: "Sleep Duration",
+		color: "var(--chart-1)",
+	},
+} satisfies ChartConfig;
 
 export default function SleepTracker() {
 	// データ（永続化対象）
@@ -329,8 +355,37 @@ export default function SleepTracker() {
 		return diffMinutes > 0 ? diffMinutes : 0;
 	};
 
+	const toDisplayMinutes = (time: string) => {
+		const [h, m] = time.split(":").map(Number);
+		let minutes = h * 60 + m;
+
+		if (minutes < 22 * 60) {
+			minutes += 24 * 60;
+		}
+
+		return minutes;
+	};
+
+	const formatMinutesToTime = (minutes: number) => {
+		const total = minutes % (24 * 60);
+		const h = Math.floor(total / 60);
+		// const m = total % 60;
+		return `${String(h).padStart(2, "0")}`;
+	};
+
+	const last7Days = records
+		.sort((a, b) => a.wakeDate.localeCompare(b.wakeDate))
+		.slice(-7);
+	const chartData = last7Days.map((record) => ({
+		date: formatDate(record.wakeDate),
+		sleep: [
+			toDisplayMinutes(record.wakeTime),
+			toDisplayMinutes(record.bedTime),
+		],
+	}));
+
 	return (
-		<div className="min-h-svh bg-neutral-950 text-neutral-100 relative">
+		<div className="min-h-svh max-w-2xl mx-auto bg-background text-foreground relative">
 			{screen === "sleeping" && pendingBedTime && (
 				<SleepWaitingScreen
 					pendingBedTime={pendingBedTime}
@@ -343,7 +398,7 @@ export default function SleepTracker() {
 			)}
 
 			{/* Main Content */}
-			<div className="max-w-2xl mx-auto px-6 py-12">
+			<div className="px-6 py-12">
 				{/* Header */}
 				<div className="mb-10">
 					{screen === "home" ? (
@@ -474,7 +529,7 @@ export default function SleepTracker() {
 						<Button
 							variant="secondary"
 							size="icon-lg"
-							className="fixed bottom-8 right-4 border border-neutral-700 text-neutral-400"
+							className="fixed bottom-10 right-4 border z-50 border-neutral-700 text-neutral-400"
 							onClick={handleWakeUp}
 						>
 							<Plus className="size-6" strokeWidth={1.5} />
@@ -500,6 +555,68 @@ export default function SleepTracker() {
 					/>
 				)}
 			</div>
+
+			{screen === "home" && (
+				<ChartContainer
+					config={chartConfig}
+					className="min-h-20 w-full px-3.5 mb-24"
+				>
+					<BarChart
+						accessibilityLayer
+						data={chartData}
+						layout="vertical"
+						margin={{ left: 10 }}
+					>
+						<CartesianGrid horizontal={false} stroke="var(--color-grid)" />
+						<YAxis
+							type="category"
+							dataKey={"date"}
+							tickLine={false}
+							tickMargin={10}
+							axisLine={false}
+							tickCount={7}
+							hide
+						/>
+						<XAxis
+							type="number"
+							domain={[1320, 2400]} // 22:00 (1320分) 〜 翌日16:00 (2400分)
+							tickFormatter={formatMinutesToTime}
+							tickLine={false}
+							axisLine={false}
+							tick={{
+								fontSize: 12,
+								fontWeight: "300",
+								fill: "var(--color-xaxis)",
+							}}
+							ticks={[
+								22 * 60, // 22:00
+								25 * 60, // 01:00
+								28 * 60, // 04:00
+								31 * 60, // 07:00
+								34 * 60, // 10:00
+								37 * 60, // 13:00
+								40 * 60, // 15:00
+							]}
+						/>
+						<Bar
+							layout="vertical"
+							dataKey="sleep"
+							fill="var(--color-sleep)"
+							radius={6}
+							barSize={24}
+							isAnimationActive={false}
+						>
+							<LabelList
+								dataKey="date"
+								position="insideRight"
+								offset={8}
+								className="fill-(--color-label) font-light"
+								fontSize={12}
+							/>
+						</Bar>
+					</BarChart>
+				</ChartContainer>
+			)}
 		</div>
 	);
 }
