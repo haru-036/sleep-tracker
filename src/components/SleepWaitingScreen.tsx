@@ -1,4 +1,5 @@
 import { Bed, RotateCw, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { PendingBedTime } from "../types/sleep";
 
 interface SleepWaitingScreenProps {
@@ -22,13 +23,14 @@ export function SleepWaitingScreen({
 
 	return (
 		<div className="fixed inset-0 bg-neutral-950 z-50 flex flex-col">
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="icon"
 				onClick={onClose}
-				className="absolute top-8 right-8 text-neutral-400 hover:text-neutral-200 transition-colors"
+				className="absolute top-5 right-5 text-neutral-500 hover:text-neutral-200"
 			>
-				<X className="w-6 h-6" strokeWidth={1.5} />
-			</button>
+				<X className="size-6" strokeWidth={1.5} />
+			</Button>
 
 			<div className="flex-1 flex flex-col items-center justify-center p-8 space-y-10">
 				<div className="text-center space-y-3">
@@ -38,40 +40,41 @@ export function SleepWaitingScreen({
 				</div>
 
 				<div className="w-full max-w-sm">
-					<div className="bg-neutral-900/70 backdrop-blur-sm rounded-3xl p-12 text-center space-y-6 border border-neutral-800/50">
+					<div className="bg-neutral-900/70 backdrop-blur-sm rounded-3xl p-10 text-center space-y-6 border border-neutral-800/50">
 						<div className="w-24 h-24 mx-auto bg-neutral-800 rounded-full flex items-center justify-center">
-							<Bed className="w-12 h-12 text-neutral-400" strokeWidth={1.5} />
+							<Bed className="size-12 text-neutral-400" strokeWidth={1.5} />
 						</div>
 
 						<div className="space-y-1">
 							<p className="text-neutral-400 text-xs tracking-wide">就寝時間</p>
 							<input
 								type="time"
-								className="text-5xl font-light text-neutral-100 tracking-tight text-center h-18"
+								className="text-5xl font-light text-neutral-300 tracking-tight text-center h-18"
 								value={pendingBedTime.time}
 								onChange={(event) => onTimeChange(event.target.value)}
 							/>
 							<p className="text-neutral-500 text-xs">
 								({minutesUntilBed}分後)
 							</p>
-							<button
-								type="button"
-								className="mt-1 p-2.5 inline-flex items-center justify-center text-neutral-400 hover:text-neutral-200 transition-colors"
+							<Button
+								variant="ghost"
+								size="icon-sm"
+								className="mt-1 text-neutral-400 hover:text-neutral-200"
 								onClick={onRefresh}
 							>
 								<RotateCw size={16} />
-							</button>
+							</Button>
 						</div>
 					</div>
 				</div>
 
-				<button
-					type="button"
+				<Button
+					variant="secondary"
+					className="w-full max-w-sm py-4 border border-neutral-700 text-neutral-300"
 					onClick={onWakeUp}
-					className="w-full max-w-sm bg-neutral-800 border border-neutral-700 text-neutral-200 rounded-full py-4 hover:bg-neutral-750 transition-colors text-sm tracking-wide"
 				>
 					記録を入力
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

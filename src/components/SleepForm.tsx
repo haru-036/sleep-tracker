@@ -1,5 +1,8 @@
 import { Bath, Circle, Coffee, Moon, Pill, Sun, X } from "lucide-react";
 import type { FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { SleepRecordInput } from "../types/sleep";
 
 interface SleepFormProps {
@@ -40,43 +43,33 @@ export function SleepForm({
 			<form onSubmit={onSubmit} className="space-y-8">
 				<div className="grid grid-cols-2 gap-6">
 					<div className="space-y-3">
-						<label
-							htmlFor="bed-time-input"
-							className="flex items-center gap-2 text-xs text-neutral-400 tracking-wide"
-						>
+						<Label htmlFor="bed-time-input">
 							<Moon className="w-3.5 h-3.5" strokeWidth={1.5} />
 							就寝
-						</label>
-						<input
+						</Label>
+						<Input
 							id="bed-time-input"
 							type="time"
 							value={currentRecord.bedTime}
 							onChange={(event) =>
 								updateRecord({ bedTime: event.target.value })
 							}
-							className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-neutral-100 rounded-2xl focus:border-neutral-600 focus:outline-none text-lg font-light appearance-none [-webkit-appearance:none]"
-							style={{ boxSizing: "border-box" }}
 							required
 						/>
 					</div>
 
 					<div className="space-y-3">
-						<label
-							htmlFor="wake-time-input"
-							className="flex items-center gap-2 text-xs text-neutral-400 tracking-wide"
-						>
+						<Label htmlFor="wake-time-input">
 							<Sun className="w-3.5 h-3.5" strokeWidth={1.5} />
 							起床
-						</label>
-						<input
+						</Label>
+						<Input
 							id="wake-time-input"
 							type="time"
 							value={currentRecord.wakeTime}
 							onChange={(event) =>
 								updateRecord({ wakeTime: event.target.value })
 							}
-							className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-neutral-100 rounded-2xl focus:border-neutral-600 focus:outline-none text-lg font-light appearance-none [-webkit-appearance:none]"
-							style={{ boxSizing: "border-box" }}
 							required
 						/>
 					</div>
@@ -214,19 +207,17 @@ export function SleepForm({
 				</div>
 
 				<div className="flex gap-4 pt-4">
-					<button
+					<Button
 						type="button"
+						variant="outline"
+						className="flex-1"
 						onClick={onCancel}
-						className="flex-1 px-6 py-3 border border-neutral-700/80 text-neutral-300/90 rounded-full hover:bg-neutral-850 transition-colors text-sm tracking-wide"
 					>
 						キャンセル
-					</button>
-					<button
-						type="submit"
-						className="flex-1 px-6 py-3 bg-neutral-700 text-neutral-100 rounded-full hover:bg-neutral-750 transition-colors text-sm tracking-wide"
-					>
+					</Button>
+					<Button type="submit" className="flex-1">
 						保存
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>

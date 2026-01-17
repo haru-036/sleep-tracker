@@ -1,6 +1,7 @@
 import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
 import { SleepForm } from "./components/SleepForm";
@@ -356,14 +357,15 @@ export default function SleepTracker() {
 								</p>
 							</div>
 							<div className="flex gap-2">
-								<button
-									type="button"
+								<Button
+									variant="ghost"
+									size="icon"
 									onClick={handleTakeCoffee}
-									className={`flex items-center gap-2 rounded-full transition-colors ${
+									className={
 										pendingCaffeine
-											? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
-											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
-									}`}
+											? "bg-neutral-800 border border-neutral-700 px-3 w-auto"
+											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850"
+									}
 								>
 									<Coffee
 										className={`w-4 h-4 ${
@@ -376,15 +378,16 @@ export default function SleepTracker() {
 											{pendingCaffeine.time}
 										</span>
 									)}
-								</button>
-								<button
-									type="button"
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
 									onClick={handleTakeMedication}
-									className={`flex items-center gap-2 rounded-full transition-colors ${
+									className={
 										pendingMedication
-											? "bg-neutral-800 border border-neutral-700 px-4 py-2.5"
-											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850 p-2.5"
-									}`}
+											? "bg-neutral-800 border border-neutral-700 px-3 w-auto"
+											: "bg-neutral-900 border border-neutral-700 hover:bg-neutral-850"
+									}
 								>
 									<Pill
 										className={`w-4 h-4 ${
@@ -399,7 +402,7 @@ export default function SleepTracker() {
 											{pendingMedication.time}
 										</span>
 									)}
-								</button>
+								</Button>
 							</div>
 						</div>
 					) : screen === "form" ? (
@@ -468,13 +471,14 @@ export default function SleepTracker() {
 					<>
 						<PreSleepActions onGoingToBed={handleGoingToBed} />
 
-						<button
-							type="button"
-							className="fixed bottom-8 right-4 size-14 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-700 flex items-center justify-center"
+						<Button
+							variant="secondary"
+							size="icon-lg"
+							className="fixed bottom-8 right-4 border border-neutral-700 text-neutral-400"
 							onClick={handleWakeUp}
 						>
-							<Plus className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
-						</button>
+							<Plus className="size-6" strokeWidth={1.5} />
+						</Button>
 
 						<RecordsList
 							records={records}
