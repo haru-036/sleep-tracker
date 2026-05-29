@@ -19,12 +19,14 @@ interface RecordsListProps {
 		wakeDate: string,
 		wakeTime: string,
 	) => string | null;
+	onEditRecord: (record: SleepRecord) => void;
 }
 
 export function RecordsList({
 	records,
 	formatDate,
 	calculateSleepDuration,
+	onEditRecord,
 }: RecordsListProps) {
 	if (records.length === 0) {
 		return (
@@ -43,62 +45,69 @@ export function RecordsList({
 	return (
 		<div className="space-y-3">
 			{records.map((record) => (
-				<Card key={record.id}>
-					<CardHeader>
-						<CardTitle>{formatDate(record.wakeDate)}</CardTitle>
-						<CardDescription>
-							{calculateSleepDuration(
-								record.bedDate,
-								record.bedTime,
-								record.wakeDate,
-								record.wakeTime,
-							)}
-						</CardDescription>
-					</CardHeader>
+				<button
+					key={record.id}
+					type="button"
+					onClick={() => onEditRecord(record)}
+					className="block w-full text-left"
+				>
+					<Card className="transition-colors hover:border-neutral-700">
+						<CardHeader>
+							<CardTitle>{formatDate(record.wakeDate)}</CardTitle>
+							<CardDescription>
+								{calculateSleepDuration(
+									record.bedDate,
+									record.bedTime,
+									record.wakeDate,
+									record.wakeTime,
+								)}
+							</CardDescription>
+						</CardHeader>
 
-					<CardContent>
-						<div className="flex items-center gap-8 text-sm">
-							<div className="flex items-center gap-2 text-neutral-300">
-								<Moon className="w-3.5 h-3.5" strokeWidth={1.5} />
-								<span className="font-light tracking-wide">
-									{record.bedTime}
-								</span>
+						<CardContent>
+							<div className="flex items-center gap-8 text-sm">
+								<div className="flex items-center gap-2 text-neutral-300">
+									<Moon className="w-3.5 h-3.5" strokeWidth={1.5} />
+									<span className="font-light tracking-wide">
+										{record.bedTime}
+									</span>
+								</div>
+								<div className="flex items-center gap-2 text-neutral-300">
+									<Sun className="w-3.5 h-3.5" strokeWidth={1.5} />
+									<span className="font-light tracking-wide">
+										{record.wakeTime}
+									</span>
+								</div>
 							</div>
-							<div className="flex items-center gap-2 text-neutral-300">
-								<Sun className="w-3.5 h-3.5" strokeWidth={1.5} />
-								<span className="font-light tracking-wide">
-									{record.wakeTime}
-								</span>
-							</div>
-						</div>
-					</CardContent>
+						</CardContent>
 
-					{(record.hasCaffeine || record.hasBath || record.hasMedication) && (
-						<CardFooter className="flex gap-2">
-							{record.hasCaffeine && (
-								<Badge>
-									<Coffee className="w-3 h-3" strokeWidth={1.5} />
-									{record.caffeineTime && (
-										<span className="ml-1">{record.caffeineTime}</span>
-									)}
-								</Badge>
-							)}
-							{record.hasBath && (
-								<Badge>
-									<Bath className="w-3 h-3" strokeWidth={1.5} />
-								</Badge>
-							)}
-							{record.hasMedication && (
-								<Badge>
-									<Pill className="w-3 h-3" strokeWidth={1.5} />
-									{record.medicationTime && (
-										<span className="ml-1">{record.medicationTime}</span>
-									)}
-								</Badge>
-							)}
-						</CardFooter>
-					)}
-				</Card>
+						{(record.hasCaffeine || record.hasBath || record.hasMedication) && (
+							<CardFooter className="flex gap-2">
+								{record.hasCaffeine && (
+									<Badge>
+										<Coffee className="w-3 h-3" strokeWidth={1.5} />
+										{record.caffeineTime && (
+											<span className="ml-1">{record.caffeineTime}</span>
+										)}
+									</Badge>
+								)}
+								{record.hasBath && (
+									<Badge>
+										<Bath className="w-3 h-3" strokeWidth={1.5} />
+									</Badge>
+								)}
+								{record.hasMedication && (
+									<Badge>
+										<Pill className="w-3 h-3" strokeWidth={1.5} />
+										{record.medicationTime && (
+											<span className="ml-1">{record.medicationTime}</span>
+										)}
+									</Badge>
+								)}
+							</CardFooter>
+						)}
+					</Card>
+				</button>
 			))}
 		</div>
 	);

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
@@ -10,6 +9,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { Button } from "@/components/ui/button";
 import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
 import { SleepForm } from "./components/SleepForm";
@@ -35,12 +35,27 @@ import {
 	loadPendingCaffeine,
 	loadPendingMedication,
 	loadSleepRecords,
+	removeSleepRecord,
 	savePendingBedTime,
 	savePendingCaffeine,
 	savePendingMedication,
 	saveSleepRecord,
 } from "./utils/sleepStorage";
 import { getLocalDateString, getPreviousDate } from "./utils/timeUtils";
+
+function createEmptyRecord(): SleepRecordInput {
+	return {
+		bedDate: "",
+		wakeDate: getLocalDateString(),
+		bedTime: "",
+		wakeTime: "",
+		hasCaffeine: false,
+		caffeineTime: "",
+		hasMedication: false,
+		medicationTime: "",
+		hasBath: false,
+	};
+}
 
 const chartConfig = {
 	grid: {
@@ -69,20 +84,16 @@ export default function SleepTracker() {
 		useState<PendingMedication | null>(null);
 	const [pendingCaffeine, setPendingCaffeine] =
 		useState<PendingCaffeine | null>(null);
-	const [currentRecord, setCurrentRecord] = useState<SleepRecordInput>({
-		bedDate: "",
-		wakeDate: getLocalDateString(),
-		bedTime: "",
-		wakeTime: "",
-		hasCaffeine: false,
-		caffeineTime: "",
-		hasMedication: false,
-		medicationTime: "",
-		hasBath: false,
-	});
+	const [currentRecord, setCurrentRecord] =
+		useState<SleepRecordInput>(createEmptyRecord);
 
 	// UI状態
 	const [manualScreen, setManualScreen] = useState<ScreenType | null>(null);
+	// 編集中の記録（新規記録と区別するための識別子。null なら新規）
+	const [editingTarget, setEditingTarget] = useState<{
+		id: string;
+		wakeDate: string;
+	} | null>(null);
 	const [activeModal, setActiveModal] = useState<ModalType>(null);
 	const [tempMedicationTime, setTempMedicationTime] = useState("");
 	const [tempCaffeineTime, setTempCaffeineTime] = useState("");
@@ -256,7 +267,24 @@ export default function SleepTracker() {
 		clearPendingCaffeine();
 	};
 
+	const handleEditRecord = (record: SleepRecord) => {
+		setEditingTarget({ id: record.id, wakeDate: record.wakeDate });
+		setCurrentRecord({
+			bedDate: record.bedDate,
+			wakeDate: record.wakeDate,
+			bedTime: record.bedTime,
+			wakeTime: record.wakeTime,
+			hasCaffeine: record.hasCaffeine,
+			caffeineTime: record.caffeineTime,
+			hasMedication: record.hasMedication,
+			medicationTime: record.medicationTime,
+			hasBath: record.hasBath,
+		});
+		setManualScreen("form");
+	};
+
 	const handleWakeUp = () => {
+		setEditingTarget(null);
 		const now = new Date();
 		const currentTime = now.toTimeString().slice(0, 5);
 		const wakeDate = getLocalDateString(now);
@@ -296,11 +324,45 @@ export default function SleepTracker() {
 	};
 
 	const handleCancelForm = () => {
+		setEditingTarget(null);
 		setManualScreen("home");
 	};
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+
+		// 編集: 既存記録の更新。pending には触れず
+		if (editingTarget) {
+			const updatedRecord: SleepRecord = {
+				...currentRecord,
+				id: editingTarget.id,
+			};
+
+			setRecords(
+				[
+					updatedRecord,
+					...records.filter(
+						(r) =>
+							r.id !== editingTarget.id &&
+							r.wakeDate !== updatedRecord.wakeDate,
+					),
+				].sort(
+					(a, b) =>
+						new Date(b.wakeDate).getTime() - new Date(a.wakeDate).getTime(),
+				),
+			);
+
+			// 起床日が変わったら古いキーを削除（ストレージは起床日キー）
+			if (editingTarget.wakeDate !== updatedRecord.wakeDate) {
+				removeSleepRecord(editingTarget.wakeDate);
+			}
+			saveSleepRecord(updatedRecord);
+
+			setEditingTarget(null);
+			setManualScreen("home");
+			setCurrentRecord(createEmptyRecord());
+			return;
+		}
 
 		const newRecord = {
 			...currentRecord,
@@ -328,17 +390,7 @@ export default function SleepTracker() {
 		clearPendingCaffeine();
 
 		setManualScreen(null); // 自動決定に戻す
-		setCurrentRecord({
-			bedDate: "",
-			wakeDate: getLocalDateString(),
-			bedTime: "",
-			wakeTime: "",
-			hasCaffeine: false,
-			caffeineTime: "",
-			hasMedication: false,
-			medicationTime: "",
-			hasBath: false,
-		});
+		setCurrentRecord(createEmptyRecord());
 	};
 
 	const calculateMinutesUntilBed = () => {
@@ -539,6 +591,7 @@ export default function SleepTracker() {
 							records={records}
 							formatDate={formatDate}
 							calculateSleepDuration={calculateSleepDuration}
+							onEditRecord={handleEditRecord}
 						/>
 					</>
 				)}

@@ -57,6 +57,15 @@ export function saveSleepRecord(record: SleepRecord): void {
 	}
 }
 
+export function removeSleepRecord(wakeDate: string): void {
+	if (!hasStorage()) return;
+	try {
+		window.localStorage.removeItem(`${SLEEP_PREFIX}${wakeDate}`);
+	} catch {
+		// ignore
+	}
+}
+
 export function loadPendingBedTime(): PendingBedTime | null {
 	if (!hasStorage()) return null;
 	try {
