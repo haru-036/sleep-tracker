@@ -1,4 +1,4 @@
-import { Coffee, Pill, Plus } from "lucide-react";
+import { Coffee, Download, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
   clearPendingBedTime,
   clearPendingCaffeine,
   clearPendingMedication,
+  exportSleepRecords,
   loadPendingBedTime,
   loadPendingCaffeine,
   loadPendingMedication,
@@ -410,6 +411,14 @@ export default function SleepTracker() {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={exportSleepRecords}
+                  className="bg-neutral-900 border border-neutral-700 hover:bg-neutral-850"
+                >
+                  <Download className="w-4 h-4 text-neutral-400" strokeWidth={1.5} />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"

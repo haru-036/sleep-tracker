@@ -66,6 +66,19 @@ export function removeSleepRecord(wakeDate: string): void {
 	}
 }
 
+export function exportSleepRecords(): void {
+	const records = loadSleepRecords();
+	const json = JSON.stringify(records, null, 2);
+	const blob = new Blob([json], { type: "application/json" });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	const date = new Date().toISOString().slice(0, 10);
+	a.href = url;
+	a.download = `sleep-records-${date}.json`;
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
 export function loadPendingBedTime(): PendingBedTime | null {
 	if (!hasStorage()) return null;
 	try {
