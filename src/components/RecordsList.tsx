@@ -6,6 +6,7 @@ interface RecordsListProps {
   records: SleepRecord[];
   formatDate: (dateStr: string) => string;
   onEditRecord: (record: SleepRecord) => void;
+  onExport: () => void;
 }
 
 function formatDurationDecimal(
@@ -27,6 +28,7 @@ export function RecordsList({
   records,
   formatDate,
   onEditRecord,
+  onExport,
 }: RecordsListProps) {
   if (records.length === 0) {
     return (
@@ -106,6 +108,15 @@ export function RecordsList({
           </button>
         );
       })}
+      <div className="py-8 flex justify-center">
+        <button
+          type="button"
+          onClick={onExport}
+          className="text-xs text-neutral-700 hover:text-neutral-500 tracking-wide"
+        >
+          エクスポート
+        </button>
+      </div>
     </div>
   );
 }

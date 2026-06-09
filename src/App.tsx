@@ -1,4 +1,4 @@
-import { Coffee, Download, Pill, Plus } from "lucide-react";
+import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -402,14 +402,6 @@ export default function SleepTracker() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={exportSleepRecords}
-                  className="bg-neutral-900 border border-neutral-700 hover:bg-neutral-850"
-                >
-                  <Download className="w-4 h-4 text-neutral-400" strokeWidth={1.5} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
                   onClick={handleTakeCoffee}
                   className={
                     pendingCaffeine
@@ -534,6 +526,7 @@ export default function SleepTracker() {
               records={records}
               formatDate={formatDate}
               onEditRecord={handleEditRecord}
+              onExport={exportSleepRecords}
             />
           </>
         )}
