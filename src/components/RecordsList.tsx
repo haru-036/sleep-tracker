@@ -59,7 +59,7 @@ export function RecordsList({
             key={record.id}
             type="button"
             onClick={() => onEditRecord(record)}
-            className="flex flex-col gap-1 w-full text-left py-5 px-3 transition-colors hover:bg-neutral-900/40"
+            className="flex flex-col gap-2 w-full text-left py-5 px-3 transition-colors hover:bg-neutral-900/40"
           >
             <div className="flex items-center gap-3">
               <span className="text-xs text-neutral-600 tracking-wide w-10 shrink-0">
