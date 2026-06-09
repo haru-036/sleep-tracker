@@ -20,6 +20,8 @@ export function loadSleepRecords(): SleepRecord[] {
 	if (!hasStorage()) return [];
 
 	const records: SleepRecord[] = [];
+	const migrateKeys: { oldKey: string; record: SleepRecord }[] = [];
+
 	try {
 		for (let i = 0; i < window.localStorage.length; i += 1) {
 			const key = window.localStorage.key(i);
@@ -31,9 +33,22 @@ export function loadSleepRecords(): SleepRecord[] {
 			try {
 				const parsed = JSON.parse(raw) as SleepRecord;
 				records.push(parsed);
+
+				// キーが sleep:{id} 形式でなければ移行対象
+				if (key !== `${SLEEP_PREFIX}${parsed.id}`) {
+					migrateKeys.push({ oldKey: key, record: parsed });
+				}
 			} catch {
 				// ignore broken record
 			}
+		}
+
+		for (const { oldKey, record } of migrateKeys) {
+			window.localStorage.setItem(
+				`${SLEEP_PREFIX}${record.id}`,
+				JSON.stringify(record),
+			);
+			window.localStorage.removeItem(oldKey);
 		}
 	} catch {
 		return [];
@@ -49,7 +64,7 @@ export function saveSleepRecord(record: SleepRecord): void {
 	if (!hasStorage()) return;
 	try {
 		window.localStorage.setItem(
-			`${SLEEP_PREFIX}${record.wakeDate}`,
+			`${SLEEP_PREFIX}${record.id}`,
 			JSON.stringify(record),
 		);
 	} catch {
@@ -57,10 +72,10 @@ export function saveSleepRecord(record: SleepRecord): void {
 	}
 }
 
-export function removeSleepRecord(wakeDate: string): void {
+export function removeSleepRecord(id: string): void {
 	if (!hasStorage()) return;
 	try {
-		window.localStorage.removeItem(`${SLEEP_PREFIX}${wakeDate}`);
+		window.localStorage.removeItem(`${SLEEP_PREFIX}${id}`);
 	} catch {
 		// ignore
 	}

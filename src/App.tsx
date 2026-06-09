@@ -68,7 +68,6 @@ export default function SleepTracker() {
   // 編集中の記録（新規記録と区別するための識別子。null なら新規）
   const [editingTarget, setEditingTarget] = useState<{
     id: string;
-    wakeDate: string;
   } | null>(null);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [tempMedicationTime, setTempMedicationTime] = useState("");
@@ -244,7 +243,7 @@ export default function SleepTracker() {
   };
 
   const handleEditRecord = (record: SleepRecord) => {
-    setEditingTarget({ id: record.id, wakeDate: record.wakeDate });
+    setEditingTarget({ id: record.id });
     setCurrentRecord({
       bedDate: record.bedDate,
       wakeDate: record.wakeDate,
@@ -317,21 +316,14 @@ export default function SleepTracker() {
       setRecords(
         [
           updatedRecord,
-          ...records.filter(
-            (r) =>
-              r.id !== editingTarget.id &&
-              r.wakeDate !== updatedRecord.wakeDate,
-          ),
+          ...records.filter((r) => r.id !== editingTarget.id),
         ].sort(
           (a, b) =>
             new Date(b.wakeDate).getTime() - new Date(a.wakeDate).getTime(),
         ),
       );
 
-      // 起床日が変わったら古いキーを削除（ストレージは起床日キー）
-      if (editingTarget.wakeDate !== updatedRecord.wakeDate) {
-        removeSleepRecord(editingTarget.wakeDate);
-      }
+      removeSleepRecord(editingTarget.id);
       saveSleepRecord(updatedRecord);
 
       setEditingTarget(null);
@@ -345,12 +337,8 @@ export default function SleepTracker() {
       id: Date.now().toString(),
     };
 
-    // Update records in state
     setRecords(
-      [
-        newRecord,
-        ...records.filter((r) => r.wakeDate !== newRecord.wakeDate),
-      ].sort(
+      [newRecord, ...records].sort(
         (a, b) =>
           new Date(b.wakeDate).getTime() - new Date(a.wakeDate).getTime(),
       ),
