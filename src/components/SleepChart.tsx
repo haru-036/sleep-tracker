@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
 import type { SleepRecord } from "../types/sleep";
 
