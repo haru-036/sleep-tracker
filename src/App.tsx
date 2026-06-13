@@ -1,10 +1,9 @@
 import { Coffee, Pill, Plus } from "lucide-react";
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PreSleepActions } from "./components/PreSleepActions";
 import { RecordsList } from "./components/RecordsList";
-import { SleepChart } from "./components/SleepChart";
 import { SleepForm } from "./components/SleepForm";
 import { SleepWaitingScreen } from "./components/SleepWaitingScreen";
 import { TimeInputModal } from "./components/TimeInputModal";
@@ -18,6 +17,9 @@ import type {
 } from "./types/sleep";
 import { formatDate, formatDateFull } from "./utils/dateFormat";
 import { deriveScreen } from "./utils/screenResolver";
+const SleepChart = lazy(() =>
+  import("./components/SleepChart").then((m) => ({ default: m.SleepChart })),
+);
 
 import {
   clearPendingBedTime,
@@ -520,7 +522,9 @@ export default function SleepTracker() {
               <Plus className="size-6" strokeWidth={1.5} />
             </Button>
 
-            <SleepChart records={records} />
+            <Suspense fallback={null}>
+              <SleepChart records={records} />
+            </Suspense>
 
             <RecordsList
               records={records}
