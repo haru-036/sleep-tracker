@@ -38,16 +38,26 @@ function formatMinutesToHour(minutes: number) {
 export function SleepChart({ records }: SleepChartProps) {
 	if (records.length === 0) return null;
 
-	const last7 = [...records]
-		.sort((a, b) => b.wakeDate.localeCompare(a.wakeDate))
+	const byDate = new Map<string, { minBed: number; maxWake: number }>();
+	for (const record of records) {
+		const bed = toDisplayMinutes(record.bedTime);
+		const wake = toDisplayMinutes(record.wakeTime);
+		const existing = byDate.get(record.wakeDate);
+		if (existing) {
+			existing.minBed = Math.min(existing.minBed, bed);
+			existing.maxWake = Math.max(existing.maxWake, wake);
+		} else {
+			byDate.set(record.wakeDate, { minBed: bed, maxWake: wake });
+		}
+	}
+
+	const last7 = [...byDate.entries()]
+		.sort(([a], [b]) => b.localeCompare(a))
 		.slice(0, 7);
 
-	const chartData = last7.map((record) => ({
-		date: String(Number(record.wakeDate.split("-")[2])),
-		sleep: [
-			toDisplayMinutes(record.wakeTime),
-			toDisplayMinutes(record.bedTime),
-		],
+	const chartData = last7.map(([date, { minBed, maxWake }]) => ({
+		date: String(Number(date.split("-")[2])),
+		sleep: [maxWake, minBed],
 	}));
 
 	return (
