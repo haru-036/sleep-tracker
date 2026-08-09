@@ -50,15 +50,15 @@ function createEmptyRecord(): SleepRecordInput {
 }
 
 export default function SleepTracker() {
-  // データ（永続化対象）
-  const [records, setRecords] = useState<SleepRecord[]>([]);
+  // データ（永続化対象）。初回レンダー前に同期で読み、開いた瞬間から正しい画面を出す
+  const [records, setRecords] = useState<SleepRecord[]>(loadSleepRecords);
   const [pendingBedTime, setPendingBedTime] = useState<PendingBedTime | null>(
-    null,
+    loadPendingBedTime,
   );
   const [pendingMedication, setPendingMedication] =
-    useState<PendingMedication | null>(null);
+    useState<PendingMedication | null>(loadPendingMedication);
   const [pendingCaffeine, setPendingCaffeine] =
-    useState<PendingCaffeine | null>(null);
+    useState<PendingCaffeine | null>(loadPendingCaffeine);
   const [currentRecord, setCurrentRecord] =
     useState<SleepRecordInput>(createEmptyRecord);
 
@@ -75,14 +75,6 @@ export default function SleepTracker() {
   // 画面決定（派生）
   const autoScreen = deriveScreen(pendingBedTime);
   const screen = manualScreen ?? autoScreen;
-
-  // Load records from storage on mount
-  useEffect(() => {
-    setRecords(loadSleepRecords());
-    setPendingBedTime(loadPendingBedTime());
-    setPendingMedication(loadPendingMedication());
-    setPendingCaffeine(loadPendingCaffeine());
-  }, []);
 
   // 画面が自動でformに遷移した場合、currentRecordを初期化
   useEffect(() => {
