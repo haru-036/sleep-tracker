@@ -44,9 +44,9 @@ function toSegment(record: SleepRecord): Segment {
 	return [bed, wake];
 }
 
-function formatDay(date: string) {
+function weekdayOf(date: string) {
 	const [y, m, d] = date.split("-").map(Number);
-	return `${d} ${WEEKDAYS[new Date(y, m - 1, d).getDay()]}`;
+	return WEEKDAYS[new Date(y, m - 1, d).getDay()];
 }
 
 function formatTick(minutes: number) {
@@ -100,7 +100,8 @@ export function SleepChart({ records }: SleepChartProps) {
 	// 記録のない日も空行として並べ、7行=7日を保つ
 	const rows = dates.map((date) => ({
 		date,
-		day: formatDay(date),
+		day: String(Number(date.split("-")[2])),
+		weekday: weekdayOf(date),
 		segments: byDate.get(date) ?? [],
 	}));
 
@@ -114,7 +115,7 @@ export function SleepChart({ records }: SleepChartProps) {
 			style={{ color: TICK_COLOR }}
 		>
 			{/* 上部の時間軸ラベル（左の日付ガターぶんだけ右にずらす） */}
-			<div className="pl-12 mb-1">
+			<div className="pl-10 mb-1">
 				<div className="relative h-4">
 					{TICKS.map((t) => (
 						<span
@@ -131,7 +132,7 @@ export function SleepChart({ records }: SleepChartProps) {
 			{/* 本体 */}
 			<div className="relative">
 				{/* 縦グリッド線（トラック領域全体に連続して引く） */}
-				<div className="absolute top-0 bottom-0 left-12 right-0 pointer-events-none">
+				<div className="absolute top-0 bottom-0 left-10 right-0 pointer-events-none">
 					{TICKS.map((t) => (
 						<div
 							key={t}
@@ -144,8 +145,9 @@ export function SleepChart({ records }: SleepChartProps) {
 				{/* 行 */}
 				{rows.map((row) => (
 					<div key={row.date} className="flex items-center h-7">
-						<div className="w-12 shrink-0 pr-2 text-right whitespace-nowrap">
+						<div className="w-10 shrink-0 pr-2 text-right whitespace-nowrap">
 							{row.day}
+							<span className="ml-0.5 text-[9px]">{row.weekday}</span>
 						</div>
 						<div className="relative flex-1 h-4">
 							{row.segments.map(([bed, wake], i) => {
