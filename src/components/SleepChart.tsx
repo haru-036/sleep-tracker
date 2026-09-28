@@ -20,15 +20,33 @@ const DAYS = 7;
 
 const TICK_COLOR = "oklch(0.46 0 0)";
 
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
 type Segment = [number, number]; // [bedMin, wakeMin]
 
-function toDisplayMinutes(time: string) {
+function toMinutes(time: string) {
 	const [h, m] = time.split(":").map(Number);
-	let minutes = h * 60 + m;
-	if (minutes < DOMAIN_MIN) {
-		minutes += 24 * 60;
-	}
-	return minutes;
+	return h * 60 + m;
+}
+
+function dayNumber(date: string) {
+	const [y, m, d] = date.split("-").map(Number);
+	return Date.UTC(y, m - 1, d) / (24 * 60 * 60 * 1000);
+}
+
+// 起床日の前日 0:00 を原点とした分に変換する。
+// 日付ごと換算するので、ドメイン外から始まる・ドメイン外で終わる睡眠も
+// 正しい位置に置かれ、ドメイン内の部分だけが描画される
+function toSegment(record: SleepRecord): Segment {
+	const bedDayOffset = dayNumber(record.bedDate) - dayNumber(record.wakeDate);
+	const bed = (bedDayOffset + 1) * 24 * 60 + toMinutes(record.bedTime);
+	const wake = 24 * 60 + toMinutes(record.wakeTime);
+	return [bed, wake];
+}
+
+function weekdayOf(date: string) {
+	const [y, m, d] = date.split("-").map(Number);
+	return WEEKDAYS[new Date(y, m - 1, d).getDay()];
 }
 
 function formatTick(minutes: number) {
@@ -63,13 +81,12 @@ export function SleepChart({ records }: SleepChartProps) {
 	const byDate = new Map<string, Segment[]>();
 	let oldestDate = records[0].wakeDate;
 	for (const record of records) {
-		const bed = toDisplayMinutes(record.bedTime);
-		const wake = toDisplayMinutes(record.wakeTime);
+		const segment = toSegment(record);
 		const segments = byDate.get(record.wakeDate);
 		if (segments) {
-			segments.push([bed, wake]);
+			segments.push(segment);
 		} else {
-			byDate.set(record.wakeDate, [[bed, wake]]);
+			byDate.set(record.wakeDate, [segment]);
 		}
 		if (record.wakeDate < oldestDate) {
 			oldestDate = record.wakeDate;
@@ -84,6 +101,7 @@ export function SleepChart({ records }: SleepChartProps) {
 	const rows = dates.map((date) => ({
 		date,
 		day: String(Number(date.split("-")[2])),
+		weekday: weekdayOf(date),
 		segments: byDate.get(date) ?? [],
 	}));
 
@@ -97,7 +115,7 @@ export function SleepChart({ records }: SleepChartProps) {
 			style={{ color: TICK_COLOR }}
 		>
 			{/* 上部の時間軸ラベル（左の日付ガターぶんだけ右にずらす） */}
-			<div className="pl-8 mb-1">
+			<div className="pl-10 mb-1">
 				<div className="relative h-4">
 					{TICKS.map((t) => (
 						<span
@@ -114,7 +132,7 @@ export function SleepChart({ records }: SleepChartProps) {
 			{/* 本体 */}
 			<div className="relative">
 				{/* 縦グリッド線（トラック領域全体に連続して引く） */}
-				<div className="absolute top-0 bottom-0 left-8 right-0 pointer-events-none">
+				<div className="absolute top-0 bottom-0 left-10 right-0 pointer-events-none">
 					{TICKS.map((t) => (
 						<div
 							key={t}
@@ -127,7 +145,10 @@ export function SleepChart({ records }: SleepChartProps) {
 				{/* 行 */}
 				{rows.map((row) => (
 					<div key={row.date} className="flex items-center h-7">
-						<div className="w-7 shrink-0 pr-2 text-right">{row.day}</div>
+						<div className="w-10 shrink-0 pr-2 text-right whitespace-nowrap">
+							{row.day}
+							<span className="ml-0.5 text-[9px]">{row.weekday}</span>
+						</div>
 						<div className="relative flex-1 h-4">
 							{row.segments.map(([bed, wake], i) => {
 								const left = toPercent(bed);
