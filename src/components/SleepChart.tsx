@@ -145,7 +145,7 @@ export function SleepChart({ records }: SleepChartProps) {
 				{/* 行 */}
 				{rows.map((row) => (
 					<div key={row.date} className="flex items-center h-7">
-						<div className="w-10 shrink-0 pr-2 text-right whitespace-nowrap">
+						<div className="w-10 shrink-0 pr-2 flex items-center justify-end whitespace-nowrap">
 							{row.day}
 							<span className="ml-0.5 text-[9px]">{row.weekday}</span>
 						</div>
