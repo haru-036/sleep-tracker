@@ -22,10 +22,10 @@ function groupByWakeDate(
 			groups.push({ wakeDate: record.wakeDate, records: [record] });
 		}
 	}
-	// 同日内は就寝時刻の昇順（夜の睡眠 → 昼寝の順）
+	// 同日内も新しい順（昼寝 → 夜の睡眠）。一覧全体を上から新しい順にそろえる
 	for (const group of groups) {
 		group.records.sort((a, b) =>
-			`${a.bedDate}T${a.bedTime}`.localeCompare(`${b.bedDate}T${b.bedTime}`),
+			`${b.bedDate}T${b.bedTime}`.localeCompare(`${a.bedDate}T${a.bedTime}`),
 		);
 	}
 	return groups;
